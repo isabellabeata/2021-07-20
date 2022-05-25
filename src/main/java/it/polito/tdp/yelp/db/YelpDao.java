@@ -6,7 +6,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
+import it.polito.tdp.yelp.model.Adiacenza;
 import it.polito.tdp.yelp.model.Business;
 import it.polito.tdp.yelp.model.Review;
 import it.polito.tdp.yelp.model.User;
@@ -80,13 +82,51 @@ public class YelpDao {
 		}
 	}
 	
-	public List<User> getAllUsers(){
+	public List<User> getAllUsers(Map<String, User>idMap){
 		String sql = "SELECT * FROM Users";
 		List<User> result = new ArrayList<User>();
 		Connection conn = DBConnect.getConnection();
 
 		try {
 			PreparedStatement st = conn.prepareStatement(sql);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+
+				User user = new User(res.getString("user_id"),
+						res.getInt("votes_funny"),
+						res.getInt("votes_useful"),
+						res.getInt("votes_cool"),
+						res.getString("name"),
+						res.getDouble("average_stars"),
+						res.getInt("review_count"));
+				
+				result.add(user);
+				
+				idMap.put(user.getUserId(), user);
+			}
+			res.close();
+			st.close();
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public List<User> getVertici(int n){
+		String sql="SELECT u.* "
+				+ "FROM users u, reviews r "
+				+ "WHERE u.user_id=r.user_id "
+				+ "GROUP BY u.user_id "
+				+ "HAVING COUNT(r.user_id)>=?";
+		List<User> result = new ArrayList<User>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setInt(1, n);
 			ResultSet res = st.executeQuery();
 			while (res.next()) {
 
@@ -108,8 +148,41 @@ public class YelpDao {
 		} catch (SQLException e) {
 			e.printStackTrace();
 			return null;
-		}
+		
+	}
 	}
 	
+	public List<Adiacenza> getArchi(User u1, User u2, int year){
+		String sql="SELECT r1.user_id, r2.user_id, COUNT(*) AS peso "
+				+ "FROM reviews r1, reviews r2 "
+				+ "WHERE r1.business_id=r2.business_id AND  "
+				+ " r1.user_id=? AND r2.user_id=? AND YEAR(r1.review_date)=? AND YEAR(r2.review_date)=? "
+				+ "GROUP BY r1.user_id, r2.user_id";
+		List<Adiacenza> result = new ArrayList<Adiacenza>();
+		Connection conn = DBConnect.getConnection();
+
+		try {
+			PreparedStatement st = conn.prepareStatement(sql);
+			st.setString(1, u1.getUserId());
+			st.setString(2, u2.getUserId());
+			st.setInt(3, year);
+			st.setInt(4, year);
+			ResultSet res = st.executeQuery();
+			while (res.next()) {
+				Adiacenza a= new Adiacenza(u1, u2, res.getInt("peso"));
+				result.add(a);
+			}
+			res.close();
+			st.close();
+			conn.close();
+			return result;
+			
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		
+	}
+		
+	}
 	
 }
