@@ -58,16 +58,39 @@ public class FXMLController {
     	
     	this.txtResult.clear();
     	
-    	int n= Integer.parseInt(this.txtN.getText());
-    	int anno= this.cmbAnno.getValue();
+  
+    		String nn= this.txtN.getText();
+    		Integer anno= this.cmbAnno.getValue();
+    		if(nn!="") {
+    			if(anno!=null ) {
+    		Integer n= Integer.parseInt(nn);
     	
-    	this.model.creaGrafo(n, anno);
-    	
-    	this.txtResult.appendText(model.nVertici());
-    	this.txtResult.appendText(model.nArchi());
-    	
-    	this.cmbUtente.getItems().addAll(this.model.getUsersVertici(n));
-    }
+    		
+    		this.model.creaGrafo(n, anno);
+    		
+    		this.txtResult.appendText(model.nVertici());
+    		this.txtResult.appendText(model.nArchi());
+    		
+    		this.cmbUtente.getItems().addAll(this.model.getUsersVertici(n));
+    			}
+    		}
+    		if(nn==null && anno== null) {
+    			this.txtResult.setText("Scegliere un anno e scegliere un numero minimo di recensioni");
+    			return;
+        	}
+    		
+    		 if( nn==null ) {
+    			this.txtResult.setText("Scegliere un numero minimo di recensioni");
+    			return;
+    		}
+    		
+    		 if(anno==null) {
+        		this.txtResult.setText("Scegliere un anno!");
+    			return;
+    	}
+        	 
+    	} 
+    
 
     @FXML
     void doUtenteSimile(ActionEvent event) {
@@ -75,6 +98,11 @@ public class FXMLController {
     	this.txtResult.clear();
     	
     	User u= this.cmbUtente.getValue();
+    	
+    	if(u==null) {
+    		this.txtResult.setText("Devi selezionare un utente dopo aver creato il grafo!\n");
+    		return;
+    	}
     	for(User u1:this.model.getMaxCompatibility(u)) {
     		this.txtResult.appendText(u1.toString()+"\n");
     	}
